@@ -24,7 +24,7 @@
 ---
 
 ## Challenges / Issues Faced
-- Carter and Mack struggled to sign into the server, but were later able to.
+- Carter and Mack had issues signing in to the server, but were later able to.
 
 ---
 
@@ -33,6 +33,7 @@
 - Complete the project proposal
 - Present the flowchart and project proposal ideas to your advisor at some point during the week.
 - Keep working on researching LLM models, best for Coding/Thinking/Writing.
+
 
 
 
