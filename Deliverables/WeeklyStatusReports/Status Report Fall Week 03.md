@@ -1,7 +1,7 @@
-# End-of-Week Progress Report - Week 02
+# End-of-Week Progress Report - Week 03
 
 **Project Title:** CS-335: AI Agents for Bioinformatics  
-**Date:** 09/08/2025 – 09/12/2025  
+**Date:** 09/15/2025 – 09/19/2025  
 
 
 ## Team Members:
@@ -20,8 +20,6 @@ There weren't any task assignments for this week.
 
 
 ## Plans for Next Week
-- Group meeting on September 16
-- Advisor meeting on September 19
-
+- Group meeting on September 23
 
 
