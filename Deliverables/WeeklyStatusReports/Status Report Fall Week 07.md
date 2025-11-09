@@ -18,7 +18,7 @@
 |-------------|------------------|-----------------------------------|
 | Ozi Jawad  | - Research on different types of LLMs. | Started on their research  |
 | Carter Struck  |  - Research on different types of LLMs.  | Started on their research |
-| Sona James  |  - Research on different types of LLMs. - Upload Code to GitHub  | Started on their research |
+| Sona James  |  - Research on different types of LLMs. <br>- Upload Code to GitHub  | Started on their research |
 | Mack Hicks  |  - Research on different types of LLMs. |  Started on their research |
 
 ---
