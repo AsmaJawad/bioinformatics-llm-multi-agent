@@ -1,0 +1,55 @@
+# Project Gantt Chart
+
+This report shows a Gantt chart visualizing the timeline of project tasks.
+
+```{python}
+import plotly.express as px
+import pandas as pd
+from datetime import datetime, timedelta
+
+df = pd.DataFrame([
+
+    dict(Task="Executive Summary Pt 1", Start="2025-10-01", Finish="2025-10-10"),
+    dict(Task="Everyone on Server", Start="2025-10-01", Finish="2025-10-11"),
+    dict(Task="Download and run two LLMs, test writing & coding", Start="2025-10-11", Finish="2025-11-07"),
+    dict(Task="Fall Design Poster", Start="2025-11-01", Finish="2025-11-14"),
+    dict(Task="Write Python code connecting LLMs & managing workflow", Start="2025-11-15", Finish="2025-12-05"),
+    dict(Task="Preliminary Design Report", Start="2025-11-20", Finish="2025-12-08"),
+    dict(Task="Test multi-agent system performance on bioinformatics data", Start="2026-01-14", Finish="2026-01-23"),
+    dict(Task="Fine-tuning code for bioinformatics", Start="2026-01-24", Finish="2026-02-27"),
+    dict(Task="Poster Rough Draft", Start="2026-02-27", Finish="2026-03-13"),
+    dict(Task="EXPO", Start="2026-03-13", Finish="2026-04-24"),
+
+])
+
+df['Start'] = pd.to_datetime(df['Start'])
+df['Finish'] = pd.to_datetime(df['Finish'])
+
+# --- Create the Gantt chart ---
+fig = px.timeline(
+    df,
+    x_start="Start",
+    x_end="Finish",
+    y="Task",
+    color="Task",
+    text="Task"
+)
+
+fig.update_yaxes(autorange="reversed")  # top-to-bottom ordering
+fig.update_xaxes(type='date')           # important for add_vline
+fig.update_layout(
+    width=1200,
+    height=600,
+    title="Project Timeline Gantt Chart",
+    xaxis_title="Date",
+    yaxis_title="Tasks",
+    bargap=0.3,
+    font=dict(size=12)
+)
+
+# --- Add vertical line for today ---
+today = datetime.today()
+
+
+fig.show()
+```
