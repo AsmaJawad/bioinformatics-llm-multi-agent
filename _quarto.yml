@@ -1,0 +1,25 @@
+project:
+  type: website
+  output-dir: . # Good for GitHub Pages
+
+website:
+  title: "Project Dashboard"
+  description: "Documentation and Gantt chart for the project"
+
+format:
+  html:
+    theme:
+      light: cosmo
+      dark: slate
+    toc: true
+    toc-depth: 3
+    smooth-scroll: true
+    code-fold: true
+    number-sections: true
+    css: styles.css
+    page-layout: full 
+
+execute:
+  echo: true
+  warning: false
+  message: false
