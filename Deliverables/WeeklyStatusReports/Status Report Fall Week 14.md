@@ -29,7 +29,7 @@
 ---
 
 ## Plans for Next Week
-- None
+- Work on the Preliminary Design Report and email advisor the PDF.
 
 
 
