@@ -51,31 +51,32 @@ def getCoderAI(usersPrompt):
 		temp = .3
 		# get the prompt from the user
 		prompt = usersPrompt
-		instructionSet = f"\n# Write a Python function only. Do not include any other languages\n# {prompt}\n# End the function after implementation with marker # END_OF_FUNCTION\n\n"
+		instructionSet = (
+			f"Task: Write a python function for: {prompt}\n"
+			"Constraints: Include necessary imports. "
+			"Output ONLY the python code. No Explanations. No text before or after.\n"
+			"Code:\n"
+		)
 
-		print(f"Coder Prompt\n{instructionSet}")
 		tokenizer.pad_token = tokenizer.eos_token
-		inputs = tokenizer(instructionSet, return_tensors="pt", padding=True)
-		inputs = {k: v.to(device) for k, v in inputs.items()}
+		inputs = tokenizer(instructionSet, return_tensors="pt", padding=True).to(device)
 		# temperature -> Controls randomness / creativity (higher values are more creative)
 		# top_p -> Nucleus sampling (This is another way to limit randomness. Instead of letting the model choose from all possible next tokens, it only samples from the smallest group of tokens whose combined probability is 90% (0.9).)
 		# eos_token_id=tokenizer.eos_token_id -> End-of-sequence marker. This tells the model: “You can stop generating when you reach this special token.”
 
-		outputs = model.generate(**inputs,max_new_tokens=100,do_sample=True, temperature=temp, top_p=0.9, eos_token_id=tokenizer.eos_token_id)
-		coderOutput= tokenizer.decode(outputs[0], skip_special_tokens=True)
+		outputs = model.generate(
+			**inputs,
+			max_new_tokens=350,
+			do_sample=True,
+			temperature=temp,
+			top_p=0.9,
+			eos_token_id=tokenizer.eos_token_id
+		)
+		full_text = tokenizer.decode(outputs[0], skip_special_tokens=True)
 
-		marker = "# END_OF_FUNCTION"
-		p = coderOutput.split(marker)
-
-		if len(p) >=2:
-			finalCodeOutput= marker.join(p[:2])
-		else:
-			finalCodeOutput = coderOutput
-		# if marker in code:
-		#     code = code.split(marker)[0] + marker
-					
-		return finalCodeOutput.strip()+ "\n" +marker
-
+		just_code = full_text[len(instructionSet):].strip()
+		clean_code = just_code.split('\n\n')[0].strip()
+		return clean_code
 def main():
 	# Main loop that runs until user breaks with command
 	while 1:
@@ -84,10 +85,14 @@ def main():
 			break
 			
 		# user does not break now ask writer
-
-		writerAnswer = getWriterAI(userPrompt)
-		print(f"Writers Answer\n{writerAnswer}")
-		coderAnswer = getCoderAI(writerAnswer)
-		print(f"Coders Answer\n{coderAnswer}")
+		ai_globals = {}
+		#writerAnswer = getWriterAI(userPrompt)
+		coderAnswer = getCoderAI(userPrompt)
+		try:
+			print(f"Coder Answers\n {coderAnswer}")
+			print("SYSTEM OUTPUT")
+			exec(coderAnswer, ai_globals)
+		except Exception as e:
+			print(f"The ai code ad an error: {e}")
 if __name__ == "__main__":
 	main()
