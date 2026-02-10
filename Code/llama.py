@@ -17,7 +17,10 @@ def getCoderAI(usersPrompt):
             "role": "system",
             "content": "You are an expert Python developer. Output ONLY valid Python code from the beginning. No explanations.",
         },
-        {"role": "user", "content": f"Write a Python function for: {prompt}"},
+        {
+            "role": "user", 
+            "content": f"Write a Python function for: {prompt}"
+        },
     ]
 
     inputs = tokenizer.apply_chat_template(
@@ -54,7 +57,6 @@ def main():
         # since the llm ouput includes the `` character, we have to clean that
         lines = coderAnswer.splitlines()
         clean_answer = "\n".join(lines[1:-1])
-        print("clean\n", clean_answer)
         
         try:
             print(f"Coder Answers\n {clean_answer}")
