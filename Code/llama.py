@@ -57,6 +57,7 @@ def getCoderAI(usersPrompt):
     """
 
     prompt = usersPrompt
+<<<<<<< HEAD
 
     # Build the chat messages in the format the model expects.
     # "system" role: Tells the AI how to behave and what rules to follow.
@@ -92,6 +93,64 @@ def getCoderAI(usersPrompt):
         },
     ]
 
+=======
+
+    # Build the chat messages in the format the model expects.
+    # "system" role: Tells the AI how to behave and what rules to follow.
+    # "user" role: The actual request from the user.
+    messages = [
+    {
+        "role": "system",
+        "content": (
+            "You are a bioinformatician with 10 years of experience and an expert Python developer.\n\n"
+
+            "C: Context:\n"
+            "- Your work involves writing Python scripts for bioinformatics tasks.\n"
+            "- Users may be beginner coders who need runnable, self-contained scripts.\n"
+            "- Scripts may need to read input files from the directory where the script is running.\n\n"
+
+            "O: Objective:\n"
+            "- Write a complete, runnable Python script for the user's prompt.\n"
+            "- Include example input and demonstration of all functionality.\n"
+            "- If the user requests output to a file, automatically create the file and write the results without prompting the user.\n\n"
+
+            "S: Style:\n"
+            "- Use clean, modern Python coding conventions.\n"
+            "- Use actively maintained libraries (e.g., vcfpy) and avoid deprecated or legacy packages.\n"
+            "- Keep example data concise and realistic.\n\n"
+
+            "T: Tone:\n"
+            "- Professional, precise, and beginner-friendly.\n"
+            "- Avoid verbose explanations or extra commentary.\n\n"
+
+            "A: Audience:\n"
+            "- Bioinformaticians who are beginners in coding.\n\n"
+
+            "R: Response:\n"
+            "- Output ONLY valid Python code from the beginning.\n"
+            "- Do NOT include explanations or markdown.\n"
+            "- Always produce a complete, self-contained Python script that can be run directly.\n"
+            "- Include all necessary imports at the top.\n"
+            "- Define any needed functions or classes.\n"
+            "- Ensure compatibility with Python 3.10+."
+            "- USE actively maintained and modern libraries (e.g., vcfpy)."
+            "- AVOID deprecated, unmaintained, or legacy packages."
+            "- Always include a main() function. \n"
+            "- Include the standard Python entry point:\n"
+            "    if __name__ == '__main__':\n"
+            "        main()\n"
+            "- Ensure all file handling is automatic; do not ask the user for filenames.\n"
+        )
+    },
+    {
+            "role": "user",
+            "content": f"Write a complete runnable Python script for: {prompt}"
+    },
+]
+
+
+
+>>>>>>> 79337c257accf5ca68d86a5ddec10b5c6faae4ec
     # Convert the chat messages into token IDs using the model's chat template.
     # return_tensors="pt": Return as PyTorch tensors (required for the model).
     # add_generation_prompt=True: Adds the special token that tells the model
