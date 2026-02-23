@@ -31,7 +31,7 @@ class identifier_type(BaseModel):
 
     #handle potential identifier translation issues
     requires_translation: bool = Field(default=False, description="True if coder needs ID converted to a different type e.g. gene name to gene_id")
-    target_id: str = Field(..., description="If translated what is the target identifier type?")
+    target_id: Optional[str] = Field(None, description="If translated, what is the target identifier type?")
 
 #using pydantic's base model ensures that LLMs execute instructions according to the generated JSON file
 #forces writer LLM to think out loud before answering -> significantly reduces hallucination errors
