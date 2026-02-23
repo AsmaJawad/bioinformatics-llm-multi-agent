@@ -1,5 +1,46 @@
 # pip install git+https://github.com/huggingface/transformers.git # TODO: merge PR to main
 
+# ====================================================================================
+# llama.py — AI-Powered Python Code Generator for Bioinformatics
+# ====================================================================================
+#
+# WHAT IT DOES:
+#   - Takes a plain-English description of what you want and generates a complete
+#     Python script using a local Llama 3.1 language model (no internet/API needed).
+#   - Automatically cleans, validates, and executes the generated code.
+#   - If the code has errors, it sends the error back to the AI to fix (up to 3 retries).
+#   - Auto-installs missing packages (e.g., pandas, biopython) to a temporary directory
+#     so they don't pollute your environment, and cleans them up when you exit.
+#
+# WHAT IT CAN DO:
+#   - Generate complete, runnable Python scripts from natural language prompts
+#   - Handle bioinformatics tasks (FASTA parsing, GC content, sequence analysis, etc.)
+#   - Auto-detect and install missing pip packages on the fly
+#   - Catch infinite loops (30-second timeout) and runtime errors gracefully
+#   - Self-correct by feeding errors back to the AI for automatic fixes
+#
+# WHAT IT CANNOT DO:
+#   - Generate code in languages other than Python
+#   - Run code that requires user interaction (input prompts inside generated code)
+#   - Sandbox file I/O or network access — generated code CAN read/write files and
+#     make network calls, so review the output before trusting it with sensitive data
+#   - Install packages that require system-level dependencies or C compilation
+#     (e.g., pysam may fail; pure-Python packages work best)
+#   - Generate very long scripts — output is capped at 1024 tokens (~50-80 lines)
+#
+# REQUIREMENTS:
+#   - Python 3.10+
+#   - GPU with CUDA support (model runs on GPU via PyTorch)
+#   - Packages: transformers, torch (see requirements.txt)
+#
+# USAGE:
+#   source Code/venv/bin/activate
+#   python Code/llama.py
+#   > Enter a prompt: "Calculate GC content from a FASTA file"
+#   > Type "Exit" to quit
+#
+# ====================================================================================
+
 # ==================== IMPORTS ====================
 # AutoModelForCausalLM: Loads a causal language model (text generation model) from Hugging Face
 # AutoTokenizer: Loads the tokenizer that converts text to tokens the model understands
@@ -16,6 +57,62 @@ import traceback
 
 # signal: Used to set a timer (alarm) that kills code execution if it runs too long (e.g., infinite loops)
 import signal
+
+# ast: Used to parse AI-generated code and extract import statements
+import ast
+
+# sys: Used to access sys.path for adding temporary package directories
+import sys
+
+# subprocess: Used to run pip install for missing packages
+import subprocess
+
+# tempfile: Used to create a temporary directory for installed packages
+import tempfile
+
+# shutil: Used to delete the temporary package directory on cleanup
+import shutil
+
+# atexit: Used to register cleanup that runs when the program exits
+import atexit
+
+# os: Used for filesystem path operations
+import os
+
+# importlib.util: Used to check if a module is already installed without importing it
+import importlib.util
+
+
+# ==================== PACKAGE MANAGEMENT CONFIG ====================
+# Session-scoped temporary directory for AI-required packages.
+# Created once when the program starts, deleted when the program exits.
+# Using pip --target keeps these completely separate from the user's environment.
+_AI_PACKAGE_CACHE = tempfile.mkdtemp(prefix="ai_packages_")
+
+
+def _cleanup_package_cache():
+    """Delete the temporary package cache directory on program exit."""
+    if os.path.exists(_AI_PACKAGE_CACHE):
+        shutil.rmtree(_AI_PACKAGE_CACHE, ignore_errors=True)
+
+
+# Register cleanup so the cache is deleted on normal exit, sys.exit(), etc.
+atexit.register(_cleanup_package_cache)
+
+# Mapping of Python import names that differ from their pip package names.
+# Most packages match (e.g., pandas -> pandas), but some don't.
+IMPORT_TO_PIP = {
+    "cv2": "opencv-python",
+    "PIL": "Pillow",
+    "sklearn": "scikit-learn",
+    "Bio": "biopython",
+    "bs4": "beautifulsoup4",
+    "yaml": "PyYAML",
+    "attr": "attrs",
+    "dateutil": "python-dateutil",
+    "Crypto": "pycryptodome",
+    "skimage": "scikit-image",
+}
 
 
 # ==================== MODEL LOADING ====================
@@ -62,36 +159,54 @@ def getCoderAI(usersPrompt):
     # "system" role: Tells the AI how to behave and what rules to follow.
     # "user" role: The actual request from the user.
     messages = [
-        {
-            "role": "system",
-            "content": (
-                # Instruct the AI to only output code, no explanations or markdown formatting
-                "You are an expert Python developer. Output ONLY valid Python code. No explanations, no markdown.\n"
-                # The code should be a full script that runs on its own, not just a snippet
-                "Always produce a complete, self-contained Python script that can be run directly.\n"
-                # Make sure imports like 'import math' are included so the code doesn't fail
-                "Include all necessary imports at the top.\n"
-                # Define any helper functions or classes the code needs
-                "Define any needed functions or classes.\n"
-                # Always include a main() function so we can actually see the code run and produce output
-                "Always include a main() function that demonstrates the code by calling the functions with example inputs and printing the results.\n"
-                # Include the standard Python entry point guard so main() actually gets called
-                "Always include an `if __name__ == '__main__': main()` block at the end.\n"
-                # If the user just says "sort a list" without giving specific data, the AI should
-                # make up its own example data so the code actually does something when executed
-                "If the user does not provide specific test cases or examples, create your own realistic example inputs to demonstrate the code works.\n"
-                # Prevent the AI from generating huge example data that exceeds the token limit
-                # and gets cut off mid-line, causing unterminated string literals
-                "IMPORTANT: Keep all example data SHORT and concise. Never generate long strings or large datasets as examples. Use small, brief examples."
-            ),
-        },
-        {
-            "role": "user",
-            # Embed the user's prompt into a clear instruction for the AI
-            "content": f"Write a complete runnable Python script for: {prompt}"
-        },
-    ]
+    {
+        "role": "system",
+        "content": (
+            "You are a bioinformatician with 10 years of experience and an expert Python developer.\n\n"
 
+            "C: Context:\n"
+            "- Your work involves writing Python scripts for bioinformatics tasks.\n"
+            "- Users may be beginner coders who need runnable, self-contained scripts.\n"
+            "- Scripts may need to read input files from the directory where the script is running.\n\n"
+
+            "O: Objective:\n"
+            "- Write a complete, runnable Python script for the user's prompt.\n"
+            "- Include example input and demonstration of all functionality.\n"
+            "- If the user requests output to a file, automatically create the file and write the results without prompting the user.\n\n"
+
+            "S: Style:\n"
+            "- Use clean, modern Python coding conventions.\n"
+            "- Use actively maintained libraries (e.g., vcfpy) and avoid deprecated or legacy packages.\n"
+            "- Keep example data concise and realistic.\n\n"
+
+            "T: Tone:\n"
+            "- Professional, precise, and beginner-friendly.\n"
+            "- Avoid verbose explanations or extra commentary.\n\n"
+
+            "A: Audience:\n"
+            "- Bioinformaticians who are beginners in coding.\n\n"
+
+            "R: Response:\n"
+            "- Output ONLY valid Python code from the beginning.\n"
+            "- Do NOT include explanations or markdown.\n"
+            "- Always produce a complete, self-contained Python script that can be run directly.\n"
+            "- Include all necessary imports at the top.\n"
+            "- Define any needed functions or classes.\n"
+            "- Ensure compatibility with Python 3.10+."
+            "- USE actively maintained and modern libraries (e.g., vcfpy)."
+            "- AVOID deprecated, unmaintained, or legacy packages."
+            "- Always include a main() function. \n"
+            "- Include the standard Python entry point:\n"
+            "    if __name__ == '__main__':\n"
+            "        main()\n"
+            "- Ensure all file handling is automatic; do not ask the user for filenames.\n"
+        )
+    },
+    {
+            "role": "user",
+            "content": f"Write a complete runnable Python script for: {prompt}"
+    },
+]
     # Convert the chat messages into token IDs using the model's chat template.
     # return_tensors="pt": Return as PyTorch tensors (required for the model).
     # add_generation_prompt=True: Adds the special token that tells the model
@@ -258,6 +373,120 @@ def validate_syntax(code):
         return False, e
 
 
+# ==================== PACKAGE MANAGEMENT ====================
+def extract_imports(code):
+    """
+    Parses Python source code and extracts top-level module names from all
+    import statements using Python's AST parser.
+
+    Handles: import X, import X as Y, from X.Y import Z, import X, Y, Z
+
+    Args:
+        code (str): Python source code string.
+
+    Returns:
+        set: Top-level module names found in import statements.
+    """
+    try:
+        tree = ast.parse(code)
+    except SyntaxError:
+        return set()
+
+    imports = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                imports.add(alias.name.split(".")[0])
+        elif isinstance(node, ast.ImportFrom):
+            if node.module:
+                imports.add(node.module.split(".")[0])
+
+    return imports
+
+
+def resolve_pip_name(import_name):
+    """
+    Converts a Python import name to the corresponding pip package name.
+    Uses the IMPORT_TO_PIP lookup for known mismatches, otherwise assumes
+    the import name matches the pip name.
+
+    Args:
+        import_name (str): The top-level Python module name.
+
+    Returns:
+        str: The pip package name to install.
+    """
+    return IMPORT_TO_PIP.get(import_name, import_name)
+
+
+def find_missing_packages(import_names):
+    """
+    Filters a set of module names to only those that are not currently importable.
+    Skips standard library modules and already-installed packages.
+
+    Args:
+        import_names (set): Set of top-level module name strings.
+
+    Returns:
+        list: Module names that need to be installed.
+    """
+    stdlib = sys.stdlib_module_names
+    missing = []
+
+    for name in import_names:
+        if name in stdlib:
+            continue
+        if importlib.util.find_spec(name) is not None:
+            continue
+        missing.append(name)
+
+    return missing
+
+
+def install_missing_packages(missing_packages):
+    """
+    Installs missing Python packages into the session-scoped cache directory
+    using pip install --target. Does NOT modify the user's base environment.
+
+    Args:
+        missing_packages (list): Module names that need to be installed.
+
+    Returns:
+        tuple: (success: bool, message: str)
+    """
+    if not missing_packages:
+        return True, "No packages to install."
+
+    pip_names = [resolve_pip_name(name) for name in missing_packages]
+
+    cmd = [
+        sys.executable, "-m", "pip", "install",
+        "--target", _AI_PACKAGE_CACHE,
+        "--quiet",
+        "--disable-pip-version-check",
+    ] + pip_names
+
+    try:
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=120,
+        )
+
+        if result.returncode == 0:
+            if _AI_PACKAGE_CACHE not in sys.path:
+                sys.path.insert(0, _AI_PACKAGE_CACHE)
+            return True, f"Installed: {', '.join(pip_names)}"
+        else:
+            return False, f"pip install failed:\n{result.stderr}"
+
+    except subprocess.TimeoutExpired:
+        return False, "Package installation timed out (120 second limit)."
+    except Exception as e:
+        return False, f"Package installation error: {e}"
+
+
 # ==================== SAFE CODE EXECUTION ====================
 def safe_exec(code, timeout=30):
     """
@@ -290,6 +519,20 @@ def safe_exec(code, timeout=30):
     valid, syntax_err = validate_syntax(code)
     if not valid:
         return False, f"SyntaxError: {syntax_err}"
+
+    # ---- Step 1.5: Detect and install missing packages ----
+    # Parse the code for import statements, check which packages are missing,
+    # and install them into the isolated cache directory.
+    import_names = extract_imports(code)
+    missing = find_missing_packages(import_names)
+
+    if missing:
+        print(f"[Auto-install] Detected missing packages: {', '.join(missing)}")
+        install_ok, install_msg = install_missing_packages(missing)
+        print(f"[Auto-install] {install_msg}")
+
+        if not install_ok:
+            return False, f"Failed to install required packages: {install_msg}"
 
     # ---- Step 2: Set up a timeout alarm ----
     # SIGALRM is a Unix/Linux signal that fires after a set number of seconds.
@@ -393,6 +636,10 @@ def main():
     4. If the code has errors, sends the error back to the AI to fix (up to 3 retries)
     5. Repeats until the user types "Exit"
     """
+
+    # Ensure the AI package cache is on sys.path for the session
+    if _AI_PACKAGE_CACHE not in sys.path:
+        sys.path.insert(0, _AI_PACKAGE_CACHE)
 
     # Infinite loop — keeps asking for prompts until the user types "Exit" or Ctrl+C
     while 1:
