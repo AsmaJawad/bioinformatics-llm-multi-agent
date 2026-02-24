@@ -41,6 +41,17 @@ class execution_step(BaseModel):
     action_desc: str = Field(..., description="Detailed technical instruction for the coder")
     tools_req: List[str] = Field(default_factory=list, json_schema_extra={"example": ["Biopython", "pandas", "bcftools"]})
 
+class math_transformations(str, Enum):
+    NORMALIZATION = "normalization"
+    LOG_TRANSFORMATION = "log_transformation"
+    FILTERING = "filtering"
+    STANDARDIZATION = "standardization"
+    REGRESSION = "regression"
+    CLUSTERING = "clustering"
+    ANOVA = "anova"
+    PCA = "pca"
+    CUSTOM = "custom" # for other transformations that are not listed
+
 #final outputted JSON file that the writer passes to the coder for detailed instructions
 class sys_blueprint(BaseModel):
     """The output of the writer Agent."""
@@ -49,6 +60,7 @@ class sys_blueprint(BaseModel):
     biological_entity: bio_entity
     primary_format: file_format
     identifier: identifier_type
+    transformations: List[math_transformations]
     execution_plan: List[execution_step]
     correct_output: str = Field(..., description="What should the program print for bioinformatic analysis")
 
