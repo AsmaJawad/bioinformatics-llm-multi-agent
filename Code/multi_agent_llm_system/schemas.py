@@ -46,7 +46,7 @@ class math_transformations(str, Enum):
     LOG_TRANSFORMATION = "log_transformation"
     FILTERING = "filtering"
     STANDARDIZATION = "standardization"
-    LIGNMENT = "alignment"
+    ALIGNMENT = "alignment"
     REGRESSION = "regression"
     CLUSTERING = "clustering"
     ANOVA = "anova"
