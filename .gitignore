@@ -1,2 +1,5 @@
 /.quarto/
 venv/
+env/
+__pycache__/
+.claude/
