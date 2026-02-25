@@ -33,14 +33,6 @@ class identifier_type(BaseModel):
     requires_translation: bool = Field(default=False, description="True if coder needs ID converted to a different type e.g. gene name to gene_id")
     target_id: Optional[str] = Field(None, description="If translated, what is the target identifier type?")
 
-#using pydantic's base model ensures that LLMs execute instructions according to the generated JSON file
-#forces writer LLM to think out loud before answering -> significantly reduces hallucination errors
-class execution_step(BaseModel):
-    step_id: int
-    task_name: str
-    action_desc: str = Field(..., description="Detailed technical instruction for the coder")
-    tools_req: List[str] = Field(default_factory=list, json_schema_extra={"example": ["Biopython", "pandas", "bcftools"]})
-
 class math_transformations(str, Enum):
     NORMALIZATION = "normalization"
     LOG_TRANSFORMATION = "log_transformation"
@@ -52,6 +44,14 @@ class math_transformations(str, Enum):
     ANOVA = "anova"
     PCA = "pca"
     CUSTOM = "custom" # for other transformations that are not listed
+
+#using pydantic's base model ensures that LLMs execute instructions according to the generated JSON file
+#forces writer LLM to think out loud before answering -> significantly reduces hallucination errors
+class execution_step(BaseModel):
+    step_id: int
+    task_name: str
+    action_desc: str = Field(..., description="Detailed technical instruction for the coder")
+    tools_req: List[str] = Field(default_factory=list, json_schema_extra={"example": ["Biopython", "pandas", "bcftools"]})
 
 #final outputted JSON file that the writer passes to the coder for detailed instructions
 class sys_blueprint(BaseModel):
