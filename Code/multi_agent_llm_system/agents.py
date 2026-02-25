@@ -1,6 +1,13 @@
 # Contains the System Prompts for the Writer and Coder LLMs. 
 # It instructs the Writer to use the JSON schema 
 # and the Coder to generate sandboxed, error-handled code.
+
+
+#TODO: try running this first and analyze speed. reduce the number of lines read by writer from the file to 3 lines
+# writer needs to know its truncated file not full
+# consider reducing instructions as LLMs are designed to do many of the functionalities 
+# in-context learning 
+
 import os
 from typing import List, Optional, Dict, Any
 
