@@ -42,7 +42,7 @@ REASONING PROTOCOL:
    - Determine if 'requires_translation' is True (e.g., if the user wants to use a tool that requires Entrez IDs but provided Gene Symbols).
 3. CLASSIFICATION: Use the provided Enums to strictly categorize the 'biological_entity' and 'primary_format'.
 4. TRANSFORMATION: Select all relevant 'math_transformations' needed to reach the goal.
-5. EXECUTION PLAN: Break the task into granular 'execution_step' objects. Each step must be technically specific for the Coder.
+5. EXECUTION PLAN: Break the task into granular 'execution_step' objects. Each step must be technically specific for the Coder. Tools required for each execution step MUST be valid python libraries STRICTLY (e.g. Never recommend R, use pandas/numpy instead).
 
 STRICT SCHEMA DEFINITION:
 You must output JSON that matches {sys_blueprint.__name__} structure:
