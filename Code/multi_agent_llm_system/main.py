@@ -85,28 +85,37 @@ def run_pipeline(user_query, target_file):
     # Implementation
     coder_config = get_coder_config()
     
-    coder_input = (f"Write a concise UNIVERSAL bash script for this blueprint. "
-        f"1. SETUP: Start with 'pip install pandas numpy biopython seaborn matplotlib'. "
-        f"2. BASH WRAPPER: Use 'python3 << 'EOF'' to start the Python portion. "
-        f"3. HARDCODE FILENAME: Use '{target_file}' directly in the Python code. "
-        f"4. SNIFFER & LOGIC: In Python, detect format (VCF/CSV/FASTA) and apply filters. "
-        f"   Strip '#' from VCF headers. Parse 'DP' from the 'INFO' column. "
-        f"5. TERMINATION: End the Python portion with a single line: 'EOF'. "
-        f"6. BASH CLEANUP: After the 'EOF', add your shell cleanup like 'rm -rf *.tmp'. "
-        f"   Do NOT put shell commands like 'rm' inside the Python block. "
-        f"7. CONSTRAINTS: Output ONLY the bash code:\n{blueprint_json}")
+    coder_input = (
+    f"Write a concise UNIVERSAL bash script for this blueprint. "
+    f"1. SETUP: Start with 'pip install pandas numpy biopython seaborn matplotlib'. "
+    f"2. BASH WRAPPER: Use 'python3 << 'EOF'' to start the Python portion. "
+    f"3. HARDCODE FILENAME: Use '{target_file}' directly in the Python code. "
+    f"4. SNIFFER & LOGIC: In Python, import io and detect format (VCF/CSV/FASTA). "
+    f"   VCF LOADING: Use this EXACT logic: "
+    f"   with open('{target_file}', 'r') as f: "
+    f"   lines = [l for l in f if not l.startswith('##')] "
+    f"   df = pd.read_csv(io.StringIO(''.join(lines)), sep='\\t') "
+    f"5. HEADER CLEANING: Run 'df.columns = [c.lstrip(\"#\") for c in df.columns]'. "
+    f"6. VALIDATION: Print 'df.columns' to the log. "
+    f"7. ROBUST DP PARSING: Extract DP from INFO using regex to get the numeric part only. "
+    f"   Example: df['DP'] = df['INFO'].str.extract(r'DP=(\\\\d+)').astype(float). "
+    f"8. FILTERING: Apply (QUAL > 30) and (DP > 10). Keep only SNPs (len(REF)==1). "
+    f"9. TERMINATION: End the Python portion with a single line: 'EOF'. "
+    f"10. BASH CLEANUP: After 'EOF', add shell cleanup like 'rm -rf *.tmp'. "
+    f"11. CONSTRAINTS: Do NOT put shell commands inside Python. Output ONLY code:\n{blueprint_json}"
+    )
     
     bash_script = call_llama(coder_config, coder_input)
 
     bash_script = bash_script.replace("```bash", "").replace("```", "").strip()
-    result = execute_in_sandbox(bash_script)
+    result = execute_in_sandbox(bash_script, target_file)
     print(result)
 
 
 if __name__ == "__main__":
     USER_QUERY = (    
-    "Filter variants.vcf VCF file to keep only SNPs (single nucleotide polymorphisms) with a "
-    "quality score above 30 and read depth greater than 10. Then create a  summary showing "
-    "the distribution of variant types (A>G, C>T, etc.) and output  the filtered variants to a new file."
+    "Calculate the GC content for each sequence in the sequences.fasta "
+    "FASTA file and identify  sequences with GC content above 60%. "
+    "Also find all EcoRI restriction sites in these high-GC sequences."
     )
-    run_pipeline(USER_QUERY, "variants.vcf")
+    run_pipeline(USER_QUERY, "sequences.fasta")
