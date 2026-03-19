@@ -34,8 +34,21 @@ def execute_in_sandbox(bash_code, target_file):
                 text=True,
                 check=True
             )
-        return result.stdout
 
+        # Copy generated solution.py back to main directory if it exists
+        solution_path = os.path.join(temp_dir, "solution.py")
+        if os.path.exists(solution_path):
+            shutil.copy(solution_path, os.path.join(os.getcwd(), "solution.py"))
+
+        # Copy any output files (e.g., filtered VCFs, PNGs) back
+        for f in os.listdir(temp_dir):
+            full = os.path.join(temp_dir, f)
+            if os.path.isfile(full) and f not in ("run_analysis.sh", os.path.basename(target_file)):
+                dest = os.path.join(os.getcwd(), f)
+                if not os.path.exists(dest):
+                    shutil.copy(full, dest)
+
+        return result.stdout
 
     except subprocess.CalledProcessError as e:
         return f"SANDBOX ERROR:\nSTDOUT: {e.stdout}\nSTDERR: {e.stderr}"
