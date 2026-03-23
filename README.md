@@ -33,9 +33,9 @@
 - Agents must debug and produce runnable Python code
 
 # Design Choices
-- We chose StarCoder for both the Writer and Coder agents for system design purposes
-- This choice was made to ensure prototype alignment and reduce the system's complexity while designing and testing the overall workflow
-- Implementing the system with a single LLM first allows us to build a robust pipeline before testing specialized LLMs for each role
+- We use Llama 3.1 Pro Coder (8B parameters) for both the Writer and Coder agents, loaded with 4-bit NF4 quantization to fit on a single GPU
+- Both agents share the same model but use different system prompts and temperature settings (Writer: 0.1 for structured output, Coder: 0.0 for deterministic code)
+- A self-correction loop feeds sandbox errors back to the Coder agent, allowing up to 3 automatic retries before reporting failure
 
 # Tools
 - Python 3.10+
@@ -52,19 +52,35 @@
 - Pydantic (structured JSON schemas)
 - Biopython (FASTA/sequence parsing)
 
-# How It Works
+# System Architecture
 
-```
-User Request + Data File
-        |
-        v
-  [Writer Agent]  -->  JSON Blueprint (execution plan)
-        |
-        v
-  [Coder Agent]   -->  Bash script containing solution.py
-        |
-        v
-  [Sandbox]       -->  Isolated execution, results returned to user
+```mermaid
+flowchart TD
+    A["User inputs prompt +\nbioinformatics data file\n(FASTA, VCF, CSV)"]
+    A -->|"plain-English query\n+ file snippet"| B
+
+    B["Writer Agent\n(Architect)"]
+    B -->|"structured JSON\nblueprint"| C
+
+    C["Coder Agent\n(Programmer)"]
+    C -->|"bash script with\nsolution.py"| D
+
+    D["Python Virtual Environment\n(sandbox)"]
+    D -->|"pip install libraries\n+ run solution.py"| E
+
+    E{"Execution\nSuccessful?"}
+    E -->|"No errors"| F["User receives\nfinished output"]
+    E -->|"Error detected"| G["Debugger Loop\n(up to 3 attempts)"]
+
+    G -->|"error + script\nfed back to Coder"| C
+
+    style A fill:#4a90d9,stroke:#2c5f8a,color:#fff
+    style B fill:#f5a623,stroke:#c4841c,color:#fff
+    style C fill:#7ed321,stroke:#5a9a18,color:#fff
+    style D fill:#9b59b6,stroke:#7d3c98,color:#fff
+    style E fill:#e74c3c,stroke:#c0392b,color:#fff
+    style F fill:#2ecc71,stroke:#27ae60,color:#fff
+    style G fill:#e67e22,stroke:#d35400,color:#fff
 ```
 
 # Usage
@@ -90,7 +106,6 @@ Amino Acid Composition: {'L': 24, 'S': 16, 'E': 16, 'K': 16, ...}
 ```
 
 # What's Next?
-- Add a Debugger Agent that automatically detects sandbox errors and re-generates corrected code
 - Expand support for additional bioinformatics file formats (BAM, BED, GFF)
 - Evaluate and integrate specialized coding LLMs for improved code generation accuracy
 - Add support for multi-file analyses and cross-sample comparisons

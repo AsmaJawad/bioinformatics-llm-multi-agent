@@ -1,0 +1,128 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 720" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <filter id="shadow" x="-5%" y="-5%" width="115%" height="115%">
+      <feDropShadow dx="2" dy="3" stdDeviation="3" flood-opacity="0.15"/>
+    </filter>
+    <marker id="arrow" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#555"/>
+    </marker>
+    <marker id="arrow-red" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#e74c3c"/>
+    </marker>
+    <linearGradient id="grad-user" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#5dade2;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#2e86c1;stop-opacity:1"/>
+    </linearGradient>
+    <linearGradient id="grad-writer" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#f5b041;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#e67e22;stop-opacity:1"/>
+    </linearGradient>
+    <linearGradient id="grad-coder" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#58d68d;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#27ae60;stop-opacity:1"/>
+    </linearGradient>
+    <linearGradient id="grad-sandbox" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#af7ac5;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#8e44ad;stop-opacity:1"/>
+    </linearGradient>
+    <linearGradient id="grad-output" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#58d68d;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#1e8449;stop-opacity:1"/>
+    </linearGradient>
+    <linearGradient id="grad-debug" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#ec7063;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#cb4335;stop-opacity:1"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="900" height="720" rx="12" fill="#f8f9fa"/>
+
+  <!-- Title -->
+  <text x="450" y="40" text-anchor="middle" font-size="22" font-weight="bold" fill="#2c3e50">BioAgent — System Architecture</text>
+  <text x="450" y="62" text-anchor="middle" font-size="13" fill="#7f8c8d">Multi-Agent LLM Pipeline for Bioinformatics Analysis</text>
+
+  <!-- ============ NODE 1: User Input ============ -->
+  <rect x="300" y="85" width="300" height="80" rx="14" fill="url(#grad-user)" filter="url(#shadow)"/>
+  <text x="450" y="115" text-anchor="middle" font-size="15" font-weight="bold" fill="#fff">User Input</text>
+  <text x="450" y="135" text-anchor="middle" font-size="11" fill="#eaf2f8">Plain-English query + data file</text>
+  <text x="450" y="150" text-anchor="middle" font-size="11" fill="#eaf2f8">(FASTA, VCF, CSV)</text>
+
+  <!-- Arrow 1 -->
+  <line x1="450" y1="165" x2="450" y2="205" stroke="#555" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="370" y="175" width="160" height="20" rx="4" fill="#eee" stroke="#ccc" stroke-width="0.5"/>
+  <text x="450" y="189" text-anchor="middle" font-size="9" fill="#555">query + file snippet</text>
+
+  <!-- ============ NODE 2: Writer Agent ============ -->
+  <rect x="300" y="210" width="300" height="80" rx="14" fill="url(#grad-writer)" filter="url(#shadow)"/>
+  <!-- Icon: pencil -->
+  <text x="330" y="258" font-size="28">&#9997;</text>
+  <text x="450" y="240" text-anchor="middle" font-size="15" font-weight="bold" fill="#fff">Writer Agent</text>
+  <text x="450" y="258" text-anchor="middle" font-size="11" fill="#fef5e7">(Architect)</text>
+  <text x="450" y="275" text-anchor="middle" font-size="10" fill="#fef5e7">Analyzes data, builds structured JSON blueprint</text>
+
+  <!-- Arrow 2 -->
+  <line x1="450" y1="290" x2="450" y2="330" stroke="#555" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="370" y="300" width="160" height="20" rx="4" fill="#eee" stroke="#ccc" stroke-width="0.5"/>
+  <text x="450" y="314" text-anchor="middle" font-size="9" fill="#555">JSON blueprint</text>
+
+  <!-- ============ NODE 3: Coder Agent ============ -->
+  <rect x="300" y="335" width="300" height="80" rx="14" fill="url(#grad-coder)" filter="url(#shadow)"/>
+  <!-- Icon: code -->
+  <text x="330" y="383" font-size="26">&lt;/&gt;</text>
+  <text x="450" y="365" text-anchor="middle" font-size="15" font-weight="bold" fill="#fff">Coder Agent</text>
+  <text x="450" y="383" text-anchor="middle" font-size="11" fill="#eafaf1">(Programmer)</text>
+  <text x="450" y="400" text-anchor="middle" font-size="10" fill="#eafaf1">Generates bash script + solution.py</text>
+
+  <!-- Arrow 3 -->
+  <line x1="450" y1="415" x2="450" y2="455" stroke="#555" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="365" y="425" width="170" height="20" rx="4" fill="#eee" stroke="#ccc" stroke-width="0.5"/>
+  <text x="450" y="439" text-anchor="middle" font-size="9" fill="#555">bash script + solution.py</text>
+
+  <!-- ============ NODE 4: Sandbox ============ -->
+  <rect x="300" y="460" width="300" height="80" rx="14" fill="url(#grad-sandbox)" filter="url(#shadow)"/>
+  <!-- Icon: box -->
+  <text x="330" y="508" font-size="26">&#128230;</text>
+  <text x="450" y="490" text-anchor="middle" font-size="15" font-weight="bold" fill="#fff">Sandbox Execution</text>
+  <text x="450" y="508" text-anchor="middle" font-size="11" fill="#f5eef8">Isolated temp directory + venv</text>
+  <text x="450" y="524" text-anchor="middle" font-size="10" fill="#f5eef8">pip install libs, run solution.py</text>
+
+  <!-- ============ DECISION: Success? ============ -->
+  <!-- Diamond -->
+  <polygon points="450,570 520,610 450,650 380,610" fill="#f9e79f" stroke="#f1c40f" stroke-width="2" filter="url(#shadow)"/>
+  <text x="450" y="607" text-anchor="middle" font-size="12" font-weight="bold" fill="#7d6608">Success?</text>
+
+  <!-- Arrow from sandbox to diamond -->
+  <line x1="450" y1="540" x2="450" y2="570" stroke="#555" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- ============ YES path: Output ============ -->
+  <line x1="450" y1="650" x2="450" y2="680" stroke="#27ae60" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="465" y="670" font-size="10" fill="#27ae60" font-weight="bold">Yes</text>
+
+  <rect x="325" y="682" width="250" height="30" rx="10" fill="url(#grad-output)" filter="url(#shadow)"/>
+  <text x="450" y="702" text-anchor="middle" font-size="13" font-weight="bold" fill="#fff">User Receives Output</text>
+
+  <!-- ============ NO path: Debugger Loop ============ -->
+  <line x1="520" y1="610" x2="700" y2="610" stroke="#e74c3c" stroke-width="2"/>
+  <text x="610" y="603" font-size="10" fill="#e74c3c" font-weight="bold">No (error)</text>
+
+  <!-- Debug box -->
+  <rect x="680" y="580" width="180" height="60" rx="12" fill="url(#grad-debug)" filter="url(#shadow)"/>
+  <text x="770" y="607" text-anchor="middle" font-size="13" font-weight="bold" fill="#fff">Debugger Loop</text>
+  <text x="770" y="625" text-anchor="middle" font-size="10" fill="#fadbd8">up to 3 retries</text>
+
+  <!-- Arrow from debugger back up to Coder -->
+  <line x1="770" y1="580" x2="770" y2="375" stroke="#e74c3c" stroke-width="2" stroke-dasharray="6,3"/>
+  <line x1="770" y1="375" x2="600" y2="375" stroke="#e74c3c" stroke-width="2" stroke-dasharray="6,3" marker-end="url(#arrow-red)"/>
+  <rect x="665" y="440" width="130" height="32" rx="4" fill="#fdedec" stroke="#e74c3c" stroke-width="0.5"/>
+  <text x="730" y="453" text-anchor="middle" font-size="9" fill="#c0392b">error + script</text>
+  <text x="730" y="465" text-anchor="middle" font-size="9" fill="#c0392b">fed back to Coder</text>
+
+  <!-- ============ LLM label ============ -->
+  <rect x="30" y="260" width="220" height="60" rx="10" fill="#fdfefe" stroke="#bbb" stroke-width="1" stroke-dasharray="4,3"/>
+  <text x="140" y="283" text-anchor="middle" font-size="11" font-weight="bold" fill="#2c3e50">Llama 3.1 Pro Coder (8B)</text>
+  <text x="140" y="300" text-anchor="middle" font-size="10" fill="#7f8c8d">4-bit NF4 quantization</text>
+  <line x1="250" y1="290" x2="300" y2="250" stroke="#bbb" stroke-width="1" stroke-dasharray="3,3"/>
+  <line x1="250" y1="290" x2="300" y2="375" stroke="#bbb" stroke-width="1" stroke-dasharray="3,3"/>
+
+</svg>
