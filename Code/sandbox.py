@@ -3,11 +3,15 @@ import os
 import tempfile
 import shutil
 
-def execute_in_sandbox(bash_code, target_file):
+def execute_in_sandbox(bash_code, target_file, output_dir="output"):
     """
-    Executes code in a truly isolated, temporary directory that 
+    Executes code in a truly isolated, temporary directory that
     is destroyed immediately after execution.
+    Results are copied to output_dir.
     """
+    # Ensure output directory exists
+    os.makedirs(output_dir, exist_ok=True)
+
     # 1. Create a unique temporary directory
     # This prevents different runs from seeing each other's venvs
     temp_dir = tempfile.mkdtemp(dir=os.getcwd(), prefix="sandbox_")
@@ -35,16 +39,16 @@ def execute_in_sandbox(bash_code, target_file):
                 check=True
             )
 
-        # Copy generated solution.py back to main directory if it exists
+        # Copy generated solution.py back to output directory if it exists
         solution_path = os.path.join(temp_dir, "solution.py")
         if os.path.exists(solution_path):
-            shutil.copy(solution_path, os.path.join(os.getcwd(), "solution.py"))
+            shutil.copy(solution_path, os.path.join(output_dir, "solution.py"))
 
-        # Copy any output files (e.g., filtered VCFs, PNGs) back
+        # Copy any output files (e.g., filtered VCFs, PNGs) back to output dir
         for f in os.listdir(temp_dir):
             full = os.path.join(temp_dir, f)
             if os.path.isfile(full) and f not in ("run_analysis.sh", os.path.basename(target_file)):
-                dest = os.path.join(os.getcwd(), f)
+                dest = os.path.join(output_dir, f)
                 if not os.path.exists(dest):
                     shutil.copy(full, dest)
 

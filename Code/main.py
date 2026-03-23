@@ -24,7 +24,8 @@ VERBOSE = False  # Set by -T flag
 class Logger(object):
     def __init__(self, verbose=False):
         self.terminal = sys.__stdout__
-        self.log = open("output.log", "a")
+        os.makedirs("output", exist_ok=True)
+        self.log = open("output/output.log", "a")
         self.verbose = verbose
 
     def write(self, message):
@@ -268,12 +269,13 @@ def run_pipeline(user_query, target_file):
     # --- Phase 3: Sandbox Execution with Self-Correction ---
     MAX_RETRIES = 3
     attempt = 1
+    output_dir = "output"
 
     while attempt <= MAX_RETRIES:
         spinner = Spinner(f"Running code (attempt {attempt}/{MAX_RETRIES})", color="green")
         spinner.start()
 
-        result = execute_in_sandbox(bash_script, target_file)
+        result = execute_in_sandbox(bash_script, target_file, output_dir=output_dir)
         print(result)
 
         if not result.startswith("SANDBOX ERROR"):
@@ -318,12 +320,12 @@ def run_pipeline(user_query, target_file):
     if result.startswith("SANDBOX ERROR"):
         user_print(f"\n\033[91mExecution failed after {MAX_RETRIES} attempts.\033[0m")
         user_print(result)
-        user_print(f"\nFull logs saved to: output.log")
+        user_print(f"\nFull logs saved to: output/output.log")
     else:
         user_print(f"\n{result}")
-        if os.path.exists("solution.py"):
-            user_print(f"\033[92mGenerated script saved to: solution.py\033[0m")
-        user_print(f"\033[2mFull logs saved to: output.log\033[0m")
+        if os.path.exists("output/solution.py"):
+            user_print(f"\033[92mGenerated script saved to: output/solution.py\033[0m")
+        user_print(f"\033[2mFull logs saved to: output/output.log\033[0m")
 
 
 def detect_format(filename):
