@@ -121,11 +121,10 @@ This prevents generated code from polluting your environment or leaving artifact
 
 ### Interactive Mode
 
-When you run without a query, the system asks three guided questions:
+When you run without a query, the system asks two guided questions:
 
 1. **Analysis type** — Preset options based on your file format, or describe your own
-2. **Thresholds/filters** — Use sensible defaults or specify custom values
-3. **Output preference** — Print to terminal, save to file, or both
+2. **Output preference** — Print to terminal, save to file, or both
 
 ### Model
 

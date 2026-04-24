@@ -18,13 +18,17 @@ def execute_in_sandbox(bash_code, target_file, output_dir="output"):
     script_path = os.path.join(temp_dir, "run_analysis.sh")
     try:
         if os.path.exists(target_file):
-                shutil.copy(target_file, temp_dir)
+            # Preserve the relative path structure inside the sandbox so that
+            # code referencing 'input/file.csv' resolves correctly.
+            dest_path = os.path.join(temp_dir, target_file)
+            os.makedirs(os.path.dirname(dest_path) or temp_dir, exist_ok=True)
+            shutil.copy(target_file, dest_path)
+            # Also drop a copy at the sandbox root so bare-basename references work too.
+            root_copy = os.path.join(temp_dir, os.path.basename(target_file))
+            if not os.path.exists(root_copy):
+                shutil.copy(target_file, root_copy)
         else:
             return f"ORCHESTRATOR ERROR: {target_file} not found in main directory."
-        
-        # Copy your data file into the sandbox so the script can see it
-        # If your file is 'variants.vcf' or 'expression_counts.csv'
-        # shutil.copy("your_data_file.vcf", temp_dir) 
 
         with open(script_path, "w") as f:
             f.write(bash_code)

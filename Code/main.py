@@ -9,6 +9,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 from agents import get_writer_config, get_coder_config, format_writer_user_prompt
 from sandbox import execute_in_sandbox
 import sys
+import subprocess
 import threading
 import time
 import itertools
@@ -235,9 +236,10 @@ def run_pipeline(user_query, target_file):
     f"Do NOT install standard library modules (sys, os, collections, re, math, json, csv, itertools, etc.).\n"
     f"2. FILENAME: Use the literal string '{target_file}' in your Python code. "
     f"Do NOT use variables — use the filename directly.\n"
-    f"3. OUTPUT: Print ALL results to stdout using print(). Do NOT write to files.\n"
-    f"4. FORMAT: Parse according to the blueprint's 'primary_format'.\n"
-    f"5. LOGIC: Follow the 'execution_plan' steps exactly.\n\n"
+    f"3. IMPORTS: If you use sys.stderr, sys.exit, or anything from the sys module, you MUST include 'import sys' at the top of solution.py. Same rule for os, re, json, csv — any stdlib module you reference must be imported.\n"
+    f"4. OUTPUT: Print ALL results to stdout using print(). Do NOT write to files.\n"
+    f"5. FORMAT: Parse according to the blueprint's 'primary_format'.\n"
+    f"6. LOGIC: Follow the 'execution_plan' steps exactly.\n\n"
     f"You MUST follow this EXACT bash script structure:\n"
     f"```\n"
     f"#!/bin/bash\n"
@@ -294,7 +296,8 @@ def run_pipeline(user_query, target_file):
                 f"ERROR:\n{result}\n\n"
                 f"Fix the script so it runs without errors. "
                 f"The data file is '{target_file}'. "
-                f"Do NOT install standard library modules (sys, os, collections, re, math, etc.). "
+                f"If your Python code references sys.stderr, sys.exit, os.path, etc., you MUST import those modules at the top of solution.py. "
+                f"Do NOT pip install standard library modules (sys, os, collections, re, math, etc.). "
                 f"Use print() for all output. "
                 f"Keep the same structure: venv setup, pip install, cat << 'EOF' > solution.py, EOF, python3 solution.py.\n"
                 f"Output ONLY the corrected bash script, no explanations."
@@ -322,9 +325,25 @@ def run_pipeline(user_query, target_file):
         user_print(result)
         user_print(f"\nFull logs saved to: output/output.log")
     else:
-        user_print(f"\n{result}")
         if os.path.exists("output/solution.py"):
             user_print(f"\033[92mGenerated script saved to: output/solution.py\033[0m")
+            # Automatically run solution.py and display its output
+            try:
+                sol_result = subprocess.run(
+                    ["python3", "output/solution.py"],
+                    capture_output=True, text=True, timeout=60
+                )
+                user_print(f"\n\033[96m--- Solution Output ---\033[0m")
+                if sol_result.stdout.strip():
+                    user_print(sol_result.stdout.strip())
+                if sol_result.stderr.strip():
+                    user_print(f"\033[91m{sol_result.stderr.strip()}\033[0m")
+            except subprocess.TimeoutExpired:
+                user_print("\033[91mSolution script timed out.\033[0m")
+            except Exception as e:
+                user_print(f"\033[91mFailed to run solution.py: {e}\033[0m")
+        else:
+            user_print(f"\n{result}")
         user_print(f"\033[2mFull logs saved to: output/output.log\033[0m")
 
 
@@ -386,17 +405,7 @@ def interactive_prompt(target_file):
     if base_query is None:
         base_query = user_input("\nDescribe what you want to do with the data:\n> ").strip()
 
-    # Question 2: Any filters or thresholds?
-    user_print("\nDo you have any specific thresholds or filters?")
-    user_print("  [1] Use defaults")
-    user_print("  [2] Specify my own")
-    filter_choice = user_input("Select (1 or 2): ").strip()
-
-    if filter_choice == "2":
-        filters = user_input("Describe your thresholds (e.g., 'quality > 30, depth > 10'):\n> ").strip()
-        base_query += f". Apply these filters: {filters}"
-
-    # Question 3: Output preference
+    # Question 2: Output preference
     user_print("\nHow would you like the output?")
     user_print("  [1] Print results to terminal")
     user_print("  [2] Save to an output file")

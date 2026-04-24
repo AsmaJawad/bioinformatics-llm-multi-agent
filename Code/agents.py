@@ -35,14 +35,18 @@ WRITER_SYSTEM_PROMPT = f"""
 You are an expert Bioinformatics Architect. Your goal is to interpret a researcher's request and provide a technical execution blueprint in JSON format.
 
 REASONING PROTOCOL:
-1. THINKING: Use the 'chain_of_thought' field to analyze the biological context in English. 
+1. THINKING: Use the 'chain_of_thought' field to analyze the biological context in English.
 2. DATA INSPECTION: Look at the provided 'DATA SNIPPET' to determine the 'identifier_type'.
    - Identify the source database (e.g., Ensembl, NCBI, UniProt).
    - Detect the specific ID pattern (e.g., ENSG... for Ensembl Gene, rs... for dbSNP).
    - Determine if 'requires_translation' is True (e.g., if the user wants to use a tool that requires Entrez IDs but provided Gene Symbols).
-3. CLASSIFICATION: Use the provided Enums to strictly categorize the 'biological_entity' and 'primary_format'.
-4. TRANSFORMATION: Select all relevant 'math_transformations' needed to reach the goal.
-5. EXECUTION PLAN: Break the task into granular 'execution_step' objects. Each step must be technically specific for the Coder. Tools required for each execution step MUST be valid python libraries STRICTLY (e.g. Never recommend R, use pandas/numpy instead).
+3. COLUMN / FIELD EXTRACTION (CRITICAL for CSV, TSV, VCF):
+   - If the snippet is a CSV or TSV, read the header row and extract the EXACT column names verbatim (e.g., 'control_1', 'treatment_1', 'gene_name').
+   - If the snippet is a VCF, note the standard columns present (e.g., 'CHROM', 'POS', 'QUAL', 'INFO', 'FILTER') and any sample columns after FORMAT.
+   - Every 'action_desc' in the execution_plan that references a column MUST use the actual column name in single quotes (e.g., "Average df['control_1'], df['control_2'], df['control_3']"). NEVER invent plausible-sounding column names like 'sample', 'control_counts', or 'treatment_counts' — only use names that literally appear in the snippet.
+4. CLASSIFICATION: Use the provided Enums to strictly categorize the 'biological_entity' and 'primary_format'.
+5. TRANSFORMATION: Select all relevant 'math_transformations' needed to reach the goal.
+6. EXECUTION PLAN: Break the task into granular 'execution_step' objects. Each step must be technically specific for the Coder, including the exact column names or field names it must reference. Tools required for each execution step MUST be valid python libraries STRICTLY (e.g. Never recommend R, use pandas/numpy instead).
 
 STRICT SCHEMA DEFINITION:
 You must output JSON that matches {sys_blueprint.__name__} structure:
@@ -77,6 +81,10 @@ STRICT CONSTRAINTS:
    - OUTPUT: Ensure the script prints the exact {output_desc} to stdout.
    - CLEANUP: Deactivate and remove the 'venv' folder before exiting.
 3. ERROR HANDLING: Use try-except blocks in the Python code and print clear error messages to stderr to help the Orchestrator.
+
+KNOWN API CHANGES (CRITICAL — generated code WILL break if you ignore these):
+- Biopython >= 1.80: 'Bio.SeqUtils.GC' has been REMOVED. Use 'from Bio.SeqUtils import gc_fraction' instead, or calculate manually: (seq.count('G') + seq.count('C')) / len(seq).
+- Do NOT use 'from Bio.SeqUtils import GC' — it will cause an ImportError.
 """
 
 # =================================================================
@@ -132,6 +140,54 @@ def get_few_shot_examples() -> str:
         }
       ],
     "correct_output": "The program should print the ID and GC content of all sequences. For sequences with GC > 60%, it must list the positions of any EcoRI sites found."
+    }
+
+    ---
+
+    Example User Input: For each gene in expression_counts.csv, compare the average of the
+    three control samples to the average of the three treatment samples and tell me whether
+    it went UP, DOWN, or stayed the SAME and by how many times.
+
+    Example Data from the expression_counts.csv file:
+    gene_id,gene_name,length,control_1,control_2,control_3,treatment_1,treatment_2,treatment_3
+    ENSG00000141510,TP53,1182,320,335,310,1450,1520,1480
+    ENSG00000012048,BRCA1,5592,180,175,190,165,170,180
+    ENSG00000076242,MLH1,2524,420,410,435,195,210,200
+
+    Perfect JSON Output:
+    {
+    "chain_of_thought": "The CSV is a wide-format expression matrix with one row per gene. The header row shows 9 columns: 'gene_id', 'gene_name', 'length', and two groups of three replicates each ('control_1', 'control_2', 'control_3' and 'treatment_1', 'treatment_2', 'treatment_3'). I must reference these exact column names in every step — I will NOT invent a 'sample' column or a 'control_counts' column. For each gene I will compute the mean of the three control columns and the mean of the three treatment columns, then the fold change treatment_mean / control_mean, and classify as UP / DOWN / SAME.",
+    "biological_entity": "RNA",
+    "primary_format": "LONG_FORMAT",
+    "identifier": {
+        "detected_type": "Ensembl Gene ID",
+        "example_id": "ENSG00000141510",
+        "db_source": "Ensembl",
+        "requires_translation": false,
+        "target_id": null
+    },
+    "transformations": ["normalization", "custom"],
+    "execution_plan": [
+        {
+        "step_id": 1,
+        "task_name": "Load wide-format expression matrix",
+        "action_desc": "Read 'input/expression_counts.csv' with pandas.read_csv. The columns are exactly: 'gene_id', 'gene_name', 'length', 'control_1', 'control_2', 'control_3', 'treatment_1', 'treatment_2', 'treatment_3'.",
+        "tools_req": ["pandas"]
+        },
+        {
+        "step_id": 2,
+        "task_name": "Compute per-group means",
+        "action_desc": "Add df['control_mean'] = df[['control_1','control_2','control_3']].mean(axis=1) and df['treatment_mean'] = df[['treatment_1','treatment_2','treatment_3']].mean(axis=1). Use these exact column names — do NOT invent a 'sample' column.",
+        "tools_req": ["pandas"]
+        },
+        {
+        "step_id": 3,
+        "task_name": "Classify and report fold change",
+        "action_desc": "Compute df['fold_change'] = df['treatment_mean'] / df['control_mean']. Label each gene UP if fold_change > 1.5, DOWN if fold_change < 0.67, else SAME. Sort by fold_change descending and print gene_name with its control_mean, treatment_mean, label, and 'x' multiplier.",
+        "tools_req": ["pandas"]
+        }
+      ],
+    "correct_output": "For each gene, print the gene_name, control mean, treatment mean, UP/DOWN/SAME label, and how many times it changed, sorted from biggest increase to biggest decrease."
     }
     """
 
