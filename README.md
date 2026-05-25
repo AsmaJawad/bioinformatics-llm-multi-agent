@@ -1,13 +1,15 @@
 ---
 
-## 👥 Collaboration & Credits
+## Collaboration & Credits
 This project was originally developed as a Senior Capstone Design project at VCU. 
 
 * **My Role:** Architectural modular design, outlining the blueprints for each agent (`schemas.py`), implementing the multi-agent execution pipeline (`agents.py`), and managing environment configurations.
 * **Advisor:** Tomaz Arodz.
-* **Team Members:** *Carter Struck (@cartaR02)
-    *  Sona James (@SonaJames12)
-        * Mack Hicks (@TacoBell1Fan)
+* **System Architecture & Core Development:** *Asmaa Jawad (@AsmaJawad)
+* **Team Members:**
+   * Carter Struck (@cartaR02)
+   * Sona James (@SonaJames12)
+   * Mack Hicks (@TacoBell1Fan)
 
 # Project Summary
 - A multi-agent AI system that uses open-source large language models (LLMs) to automatically process, analyze, and interpret genomic datasets.
