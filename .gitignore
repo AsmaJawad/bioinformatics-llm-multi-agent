@@ -1,5 +1,7 @@
-/.quarto/
-venv/
-env/
-__pycache__/
-.claude/
+# Ignore local environment variables
+.env
+
+# Ignore local execution logs and outputs
+*.log
+Code/input/
+Code/output/
