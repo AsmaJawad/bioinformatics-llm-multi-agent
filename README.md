@@ -1,11 +1,13 @@
-![Capstone Poster](CapstonePoster.png)
+---
 
-# CS-335 AI Agents for Bioinformatics
-### Course/Term: CMSC-335, Fall 2025 - Spring 2026
-### Members: Ozi Jawad, Carter Struck, Mack Hicks, Sona James
-### CS Advisor: Dr. Tomasz Arodz
-### Partner: VCU College of Engineering
-### Mentor: Tomasz Arodz, Ph.D.
+## 👥 Collaboration & Credits
+This project was originally developed as a Senior Capstone Design project at VCU. 
+
+* **My Role:** Architectural modular design, outlining the blueprints for each agent (`schemas.py`), implementing the multi-agent execution pipeline (`agents.py`), and managing environment configurations.
+* **Advisor:** Tomaz Arodz.
+* **Team Members:** *Carter Struck (@cartaR02)
+    *  Sona James (@SonaJames12)
+        * Mack Hicks (@TacoBell1Fan)
 
 # Project Summary
 - A multi-agent AI system that uses open-source large language models (LLMs) to automatically process, analyze, and interpret genomic datasets.
