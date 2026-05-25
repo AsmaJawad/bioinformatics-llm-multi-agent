@@ -2,11 +2,11 @@
 
 # Collaboration & Credits
 This project was originally developed as a Senior Capstone Design project at VCU. 
-
-* **My Role:** Architectural modular design, outlining the blueprints for each agent (`schemas.py`), implementing the multi-agent execution pipeline (`agents.py`), and managing environment configurations.
-* **Advisor:** Tomaz Arodz.
+* **Advisor:** Tomaz Arodz
 * **System Architecture & Core Development:**
   * Asmaa Jawad (@AsmaJawad)
+    * **Role:** Architectural modular design, outlining the blueprints for each agent (`schemas.py`), implementing the multi-agent execution pipeline (`agents.py`), and managing environment configurations.
+    
 * **Team Members:**
   * Carter Struck (@cartaR02)
   * Sona James (@SonaJames12)
